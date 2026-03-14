@@ -24,7 +24,7 @@ export default function OutreachQueue() {
   const [hideCompleted, setHideCompleted] = useState(true);
 
   useEffect(() => {
-    const merged = mergeWithTracking(companiesData as Company[]);
+    const merged = mergeWithTracking(companiesData as unknown as Company[]);
     // Sort by score descending
     merged.sort((a, b) => b.scores.total - a.scores.total);
     setCompanies(merged);
@@ -53,15 +53,31 @@ export default function OutreachQueue() {
 
   const current = queue[currentIndex] || null;
 
-  // Regenerate message when company or type changes
+  // Load saved message or generate fresh when company/type changes
   useEffect(() => {
     if (!current) return;
-    const msg =
+    const savedKey = messageType === "email" ? "saved_email_message" : "saved_linkedin_message";
+    const saved = current[savedKey];
+    const msg = saved || (
       messageType === "email"
         ? generateOutreachMessage(current)
-        : generateLinkedInMessage(current);
+        : generateLinkedInMessage(current)
+    );
     setEditedMessage(msg);
-  }, [current, messageType]);
+  }, [current?.id, messageType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save edited message to localStorage after 800ms of inactivity
+  useEffect(() => {
+    if (!current || !editedMessage) return;
+    const key = messageType === "email" ? "saved_email_message" : "saved_linkedin_message";
+    const timer = setTimeout(() => {
+      saveTracking(current.id, { [key]: editedMessage } as Partial<Company>);
+      setCompanies((prev) =>
+        prev.map((c) => (c.id === current.id ? { ...c, [key]: editedMessage } : c))
+      );
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [editedMessage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = () => {
     navigator.clipboard.writeText(editedMessage);

@@ -40,6 +40,8 @@ export interface Company {
   invested: boolean;
   notes: string;
   outreach_status: "not_started" | "drafted" | "sent" | "replied";
+  saved_linkedin_message: string;
+  saved_email_message: string;
 }
 
 export type SortField =

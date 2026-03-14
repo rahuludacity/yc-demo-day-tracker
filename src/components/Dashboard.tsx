@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [outreachTarget, setOutreachTarget] = useState<Company | null>(null);
 
   useEffect(() => {
-    const merged = mergeWithTracking(companiesData as Company[]);
+    const merged = mergeWithTracking(companiesData as unknown as Company[]);
     setCompanies(merged);
   }, []);
 
